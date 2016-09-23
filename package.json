@@ -11,6 +11,11 @@
     "clean": "rimraf lib dist",
     "prepublish": "npm run clean && npm run build"
   },
+  "files": [
+    "dist",
+    "lib",
+    "src",
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/herrkris/react-spinning-numbers.git"
