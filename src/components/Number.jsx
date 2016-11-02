@@ -20,12 +20,12 @@ class Number extends Component {
     if (this.state.queue.length > 0) {
       setTimeout(() => {
         const { queue } = this.state;
-        const nextValue = queue.shift();
+        const nextValue = queue.pop();
         this.setState({
           animating: true,
           animateTo: nextValue.animateTo,
           animateFrom: nextValue.animateFrom,
-          queue,
+          queue: [],
         });
         this.forceUpdate();
       }, 1);
