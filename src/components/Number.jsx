@@ -7,18 +7,34 @@ class Number extends Component {
   }
 
   state = {
-    value: this.props.value,
+    animateTo: this.props.value,
+    animateFrom: this.props.value,
     animating: false,
+    queue: [],
   }
 
   // Force an update when the transition ended
   finishedAnimating = () => {
     this.setState({ animating: false });
     this.forceUpdate();
+    if (this.state.queue.length > 0) {
+      setTimeout(() => {
+        const { queue } = this.state;
+        const nextValue = queue.shift();
+        this.setState({
+          animating: true,
+          animateTo: nextValue.animateTo,
+          animateFrom: nextValue.animateFrom,
+          queue,
+        });
+        this.forceUpdate();
+      }, 1);
+    }
+
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.value !== nextProps.value;
+    return nextProps.value !== this.state.value;
   }
 
   /**
@@ -31,11 +47,21 @@ class Number extends Component {
    * @param {Props} Object with the new value.
    */
   componentWillReceiveProps(nextProps) {
-    if (this.props.value !== nextProps.value) {
-      this.setState({
-        value: this.props.value,
-        animating: true,
-      });
+    if (nextProps.value !== this.props.value) {
+      if (this.state.animating) {
+        this.setState({
+          queue: [ ...this.state.queue, { 
+            animateTo: nextProps.value,
+            animateFrom: this.props.value,
+          }],
+        });
+      } else {
+        this.setState({
+          animateTo: nextProps.value,
+          animateFrom: this.props.value,
+          animating: true,
+        });
+      }
     }
   }
 
@@ -74,15 +100,15 @@ class Number extends Component {
    */
   render() {
     if (this.state.animating) {
-      let valueToShow = this.props.value;
-      let steps = valueToShow - this.state.value;
+      let animateTo = this.state.animateTo;
+      let steps = animateTo - this.state.animateFrom;
 
       // If our next value is smaller than the current on display we just add
       // ten so we can safely calculate the difference between those two values
       // and get a positive number.
-      if (valueToShow < this.state.value) {
-          valueToShow += 10;
-          steps = valueToShow - this.state.value;
+      if (animateTo < this.state.animateFrom) {
+          animateTo += 10;
+          steps = animateTo - this.state.animateFrom;
       }
 
       return (
@@ -92,14 +118,14 @@ class Number extends Component {
           onRest={this.finishedAnimating}>
           {interpolatingStyle => (
             <div style={{ float: 'left', transform: `translateY(${-interpolatingStyle.y}%)` }}>
-              {this.getDigits(this.state.value).map(digit => <div key={`digit-${digit}`}>{digit}</div>)}
+              {this.getDigits(this.state.animateFrom).map(digit => <div key={`digit-${digit}`}>{digit}</div>)}
             </div>
           )}
         </Motion>
       )
     }
 
-    return <div style={{ float: 'left' }}>{this.props.value}</div>;
+    return <div style={{ float: 'left' }}>{this.state.animateTo}</div>;
   }
 }
 
